@@ -4,12 +4,16 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 import os
 from dotenv import load_dotenv
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+import asyncio
 
 load_dotenv()
 # Replace with your actual bot token
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 PORT = int(os.getenv("PORT", 8443))  # Default to 8443 if not set
 WEBHOOK_URL = f"https://{os.environ['RENDER_SERVICE_NAME']}.onrender.com/{BOT_TOKEN}"
+MY_CHAT_ID = int(os.getenv("MY_CHAT_ID"))
 
 # Load routine from file
 def load_routine():
@@ -169,8 +173,15 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('Hello! I am your bot.')
+
+# Scheduled job
+async def send_daily_routine():
+    print("⏰ Sending daily routine...")
+    await app.bot.send_message(chat_id=MY_CHAT_ID, text="📅 This is your daily routine!")
+
 # Main function to run the bot
-def main():
+async def main():
+    global app
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("today", today))
@@ -178,19 +189,28 @@ def main():
     app.add_handler(CommandHandler("tomorrow", tomorrow))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("ongoing", ongoing))
-    print("✅ Bot running. Send /today in chat.\n  📌 *Available Commands:*\n\n"
+    print("✅ Bot running. \n 📌 *Available Commands:*\n"
         "/today - Show today's classes\n"
         "/tomorrow - Show tomorrow's classes\n"
         "/next - Show next class for today\n"
         "/ongoing - Show ongoing class\n"
         "/help - Show this help message")
     
-    app.run_webhook(
+    await app.initialize()
+    await app.bot.set_webhook(WEBHOOK_URL)
+    await app.start()
+
+    await app.updater.start_webhook(
         listen="0.0.0.0",
         port=PORT,
         url_path=BOT_TOKEN,
         webhook_url=WEBHOOK_URL
     )
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(send_daily_routine, CronTrigger(hour=0, minute=30))  # Change time as needed
+    scheduler.start()
+    await asyncio.Event().wait()
+
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
