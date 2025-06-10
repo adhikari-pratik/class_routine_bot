@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 # Replace with your actual bot token
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+PORT = int(os.getenv("PORT", 8443))  # Default to 8443 if not set
+WEBHOOK_URL = f"https://{os.environ['RENDER_SERVICE_NAME']}.onrender.com/{BOT_TOKEN}"
 
 # Load routine from file
 def load_routine():
@@ -154,9 +156,13 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(msg, parse_mode="Markdown")
 
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('Hello! I am your bot.')
 # Main function to run the bot
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("today", today))
     app.add_handler(CommandHandler("next", upcoming))
     app.add_handler(CommandHandler("tomorrow", tomorrow))
@@ -168,7 +174,13 @@ def main():
         "/next - Show next class for today\n"
         "/ongoing - Show ongoing class\n"
         "/help - Show this help message")
-    app.run_polling()
+    
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        url_path=BOT_TOKEN,
+        webhook_url=WEBHOOK_URL
+    )
 
 if __name__ == "__main__":
     main()
