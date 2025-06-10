@@ -2,12 +2,28 @@ import json
 import datetime
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 import os
 from dotenv import load_dotenv
+import asyncio
 
 load_dotenv()
 # Replace with your actual bot token
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+MY_CHAT_ID = os.getenv("MY_CHAT_ID")
+
+
+scheduler = AsyncIOScheduler()
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Hello! I’ll send your daily routine at 7 AM.")
+
+async def send_daily_routine():
+    try:
+        await app.bot.send_message(chat_id=MY_CHAT_ID, text="📅 Here's your daily routine!")
+    except Exception as e:
+        print(f"❌ Error sending routine: {e}")
 
 # Load routine from file
 def load_routine():
@@ -163,21 +179,50 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(msg, parse_mode="Markdown")
 
+async def get_chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    await update.message.reply_text(f"Your Chat ID is: {chat_id}")
+
 # Main function to run the bot
-def main():
+# async def main():
+#     app = ApplicationBuilder().token(BOT_TOKEN).build()
+#     app.add_handler(CommandHandler("start", start))
+#     app.add_handler(CommandHandler("today", today))
+#     app.add_handler(CommandHandler("next", upcoming))
+#     app.add_handler(CommandHandler("tomorrow", tomorrow))
+#     app.add_handler(CommandHandler("help", help_command))
+#     app.add_handler(CommandHandler("ongoing", ongoing))
+#     app.add_handler(CommandHandler("id", get_chat_id))
+#     print("✅ Bot running.\n  📌 *Available Commands:*\n"
+#         "/today - Show today's classes\n"
+#         "/tomorrow - Show tomorrow's classes\n"
+#         "/next - Show next class for today\n"
+#         "/ongoing - Show ongoing class\n"
+#         "/id - Get your chat ID\n"
+#         "/help - Show this help message")
+    
+#     scheduler.add_job(send_daily_routine, CronTrigger(hour=0, minute=10))  # adjust time as needed
+#     scheduler.start()
+#     app.run_polling()
+async def main():
+    global app
     app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("today", today))
-    app.add_handler(CommandHandler("next", upcoming))
-    app.add_handler(CommandHandler("tomorrow", tomorrow))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("ongoing", ongoing))
-    print("✅ Bot running. Send /today in chat.\n  📌 *Available Commands:*\n\n"
-        "/today - Show today's classes\n"
-        "/tomorrow - Show tomorrow's classes\n"
-        "/next - Show next class for today\n"
-        "/ongoing - Show ongoing class\n"
-        "/help - Show this help message")
-    app.run_polling()
+
+    app.add_handler(CommandHandler("start", start))
+
+    # Start bot (without run_polling, to allow async scheduler)
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+
+    # Start scheduler AFTER loop is ready
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(send_daily_routine, CronTrigger(hour=0, minute=15, second=55))  # Adjust time
+    scheduler.start()
+
+    print("✅ Bot running with scheduler...")
+    # Keep it alive
+    await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
