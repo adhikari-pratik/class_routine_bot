@@ -1,0 +1,71 @@
+{
+	"Sunday": {
+		"start_time": "10:15:00",
+		"classes": [
+			["DSAP", ["L"], 2],
+			["Break", ["B"], 1],
+			["Energy", ["L"], 2],
+			["SIC", ["L"], 3]
+		]
+	},
+	"Monday": {
+		"start_time": "10:15:00",
+		"Classes": [
+			["DSAP", ["P"], 3],
+			["Break", ["B"], 1],
+			["SIC", ["L", "P"], 4]
+		]
+	},
+	"Tuesday": {
+		"start_time": "13:35:00",
+		"classes": [
+			["CN", ["L"], 2],
+			["PM", ["L"], 2]
+		]
+	},
+	"Wednesday": {
+		"start_time": "10:15:00",
+
+		"classes": [
+			["CN", ["P"], 3],
+			["Break", ["B"], 1],
+			["DS", ["L"], 2],
+			["DSAP", ["L"], 2]
+		]
+	},
+	"Thursday": {
+		"start_time": "10:15:00",
+
+		"classes": [
+			["OM", ["L"], 2],
+			["CN", ["L"], 2],
+			["Break", ["B"], 1],
+			["SIC", ["P"], 3]
+		]
+	},
+	"Friday": {
+		"start_time": "10:15:00",
+		"classes": [
+			["OM", ["L"], 2],
+			["DS", ["L"], 3],
+			["Break", ["B"], 1],
+			["PM", ["L"], 2]
+		]
+	},
+	"Saturday": {},
+
+	"DSAP": "Digital Signal Analysis & Processing (SPP)",
+	"Energy": "Energy Environment & Society (BA)",
+	"SIC": "Elective I - Big Data (SIC)",
+	"CN": "Computer Networks (SKG)",
+	"PM": "Project Management (AKT)",
+	"DS": "Distributed Systems (BRD)",
+	"OM": "Organization & Management (AJ)",
+	"Subjects": ["DSAP", "Energy", "SIC", "CN", "PM", "DS", "OM"],
+
+	"L": "🗣️Lecture",
+	"P": "💻Practical",
+	"B": "🍕Lunch",
+
+	"class_time": 50
+}

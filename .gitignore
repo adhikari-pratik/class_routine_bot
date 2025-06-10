@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables / secrets
+.env
+
+# Virtual environment
+venv/
+env/
+
+# VS Code / IDE settings
+.vscode/
+.idea/
+
+# macOS system files
+.DS_Store
+
+# Render deploy logs or other temp files
+*.log
+
+# Jupyter Notebooks (if used)
+*.ipynb_checkpoints/
+
+# GitHub / Render-specific
+render.yaml.lock
+
+test.py
+# Temporary files
+*.tmp
+tempCodeRunnerFile.py
