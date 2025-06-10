@@ -49,7 +49,7 @@ async def upcoming(update: Update, context: ContextTypes.DEFAULT_TYPE):
     today = datetime.date.today()
     rem = 0
 
-    if not classes['classes']:
+    if not classes:
         await update.message.reply_text("🎉 No classes for today.")
         await tomorrow(update, context)
     else:
@@ -77,14 +77,20 @@ async def upcoming(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # ✅ Proper time comparison
             # print("DEBUG -->", datetime.datetime.now(),  begin_time, end_time)
-            if datetime.datetime.now() < end_time:
+            # print(datetime.datetime.combine(today, (datetime.datetime.strptime("13:37:00", "%H:%M:%S")).time()))
+            if (datetime.datetime.now() < end_time) and (datetime.datetime.now() < begin_time):
+                # print("in the loop")
                 rem += 1
                 msg += f"\n• {subject}\n  {class_type}\n   🕒 {time_str}\n  ⏳{duration} Periods({duration*routine['class_time']} mins)\n"
              
         if rem == 0:
             msg += f"\n🎉 Classes finished for today → {weekday}."
+            await update.message.reply_text(msg)
+            await tomorrow(update, context)
+            return
 
         await update.message.reply_text(msg)
+
 
 
 async def tomorrow(update: Update, context: ContextTypes.DEFAULT_TYPE):
