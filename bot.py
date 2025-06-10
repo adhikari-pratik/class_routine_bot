@@ -162,7 +162,12 @@ def main():
     app.add_handler(CommandHandler("tomorrow", tomorrow))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("ongoing", ongoing))
-    print("✅ Bot running. Send /today in chat.")
+    print("✅ Bot running. Send /today in chat.\n  📌 *Available Commands:*\n\n"
+        "/today - Show today's classes\n"
+        "/tomorrow - Show tomorrow's classes\n"
+        "/next - Show next class for today\n"
+        "/ongoing - Show ongoing class\n"
+        "/help - Show this help message")
     app.run_polling()
 
 if __name__ == "__main__":
