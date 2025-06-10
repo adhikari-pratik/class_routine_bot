@@ -116,7 +116,7 @@ async def tomorrow(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def ongoing(update: Update, context: ContextTypes.DEFAULT_TYPE):
     routine= load_routine()
     weekday = datetime.datetime.now().strftime("%A")
-    today = (datetime.datetime.now())
+    today = (datetime.date.today())
     classes = routine.get(weekday, [])
     print("DEBUG -->", today)
 
@@ -131,18 +131,22 @@ async def ongoing(update: Update, context: ContextTypes.DEFAULT_TYPE):
         begin_time = start_time
         end_time = begin_time + datetime.timedelta(minutes=duration * routine['class_time'])
         time_str = f"{begin_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
-
-        if datetime.datetime.now() >= begin_time and datetime.datetime.now() <= end_time:
+        start_time = end_time
+        if (datetime.datetime.now()>= begin_time) and (datetime.datetime.now() <= end_time):
             class_type = f"{routine.get(kind[0], kind[0])} "
             for k in range(1, len(kind)):
                 class_type += f"+ {routine.get(kind[k], kind[k])} "
-            msg = f"📚 Ongoing Class:\n\n• {subject}\n  {class_type}\n  🕒{time_str}\n  ⏳{duration} Periods({duration*routine['class_time']} mins)\n"
+            msg = f"📚 Ongoing Class:\n\n• {subject}\n  {class_type}\n  🕒{time_str}\n  ⏳{((end_time-datetime.datetime.now()).total_seconds()//60)})\n"
             await update.message.reply_text(msg)
             return
 
-        else:
-            await update.message.reply_text(f"🎉 No ongoing classes your next class starts at {begin_time.strftime('%H:%M')}.")
-            return
+    if datetime.datetime.now() > start_time:
+        await update.message.reply_text(f"🎉 Classes Finished for Today -->{weekday}.")
+        await tomorrow(update, context)
+        return
+    
+    await update.message.reply_text(f"🎉 No ongoing classes your next class starts at {start_time.strftime('%H:%M')}.")
+    return
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
