@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 import asyncio
+import ZoneInfo
 import pytz
 
 load_dotenv()
@@ -16,8 +17,8 @@ PORT = int(os.getenv("PORT", 8443))  # Default to 8443 if not set
 WEBHOOK_URL = f"https://{os.environ['RENDER_SERVICE_NAME']}.onrender.com/{BOT_TOKEN}"
 MY_CHAT_ID = int(os.getenv("MY_CHAT_ID"))
 
-my_timezone = pytz.timezone("Asia/Kathmandu")
-current_time = datetime.datetime.now(my_timezone)
+my_timezone = ZoneInfo("Asia/Kathmandu")
+current_time = datetime.datetime.now(tz=my_timezone)
 
 # Load routine from file
 def load_routine():
@@ -29,20 +30,22 @@ async def today(update: Update, context: ContextTypes.DEFAULT_TYPE):
     routine = load_routine()
     weekday = current_time.strftime('%A')
     classes = routine.get(weekday, [])
+    today_time = current_time.date()
     out = f"**📅{weekday}**\n"
     if not classes['classes']:
         await update.message.reply_text("🎉 No classes today!")
         await tomorrow(update, context)
     else:
-        start_time = classes.get("start_time", "10:15:00")
+        start_time_str = classes.get("start_time", "10:15:00")
+        start_time = datetime.datetime.strptime(start_time_str, "%H:%M:%S").time()
+        current_start = datetime.datetime.combine(today_time, start_time).replace(tzinfo=my_timezone)
         msg = f"📚 Classes for Today -->{weekday}:\n\n"
         for sub, kind, duration  in classes["classes"]:
             subject = routine.get(sub, sub)
-
-            begin_time = (datetime.datetime.strptime(start_time, '%H:%M:%S'))
-            end_time = (datetime.datetime.strptime(start_time, '%H:%M:%S') + datetime.timedelta(minutes=duration*routine['class_time'])).time()
+            begin_time = current_start
+            end_time = begin_time + datetime.timedelta(minutes=duration*routine['class_time'])
             time = f"{begin_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
-            start_time = str(end_time)
+            current_start = end_time
             class_type = f"{routine.get(kind[0], kind[0])} "
             for k in range(1, len(kind)):
                 class_type += f"+ {routine.get(kind[k], kind[k])} "
@@ -63,10 +66,8 @@ async def upcoming(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         start_time_str = classes.get("start_time", "10:15:00")
         start_time = datetime.datetime.strptime(start_time_str, "%H:%M:%S").time()
-        current_start = datetime.datetime.combine(today, start_time)
+        current_start = datetime.datetime.combine(today, start_time).replace(tzinfo=my_timezone)
         msg = f"📅 Next class for today → {weekday}:\n"
-        start_time = datetime.datetime.strptime(classes.get("start_time", "10:15:00"), '%H:%M:%S').time()
-        current_start = datetime.datetime.combine(today, start_time)
 
         for sub, kind, duration in classes["classes"]:
             subject = routine.get(sub, sub)
@@ -109,7 +110,7 @@ async def tomorrow(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not classes:
         await update.message.reply_text(f"🎉 No classes for tomorrow -->{weekday}.\nEnjoy your holiday 🎉")
     else:
-        start_time = datetime.datetime.combine(tomo, datetime.datetime.strptime(classes.get("start_time", "10:15:00"), '%H:%M:%S').time())  
+        start_time = datetime.datetime.combine(tomo, datetime.datetime.strptime(classes.get("start_time", "10:15:00"), '%H:%M:%S').time()).replace(tzinfo=my_timezone)  
         msg = f"📚 Classes for Tomorrow-{weekday}\n\n"
         for sub, kind, duration in classes['classes']:
             subject = routine.get(sub, sub)
@@ -138,14 +139,14 @@ async def ongoing(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await tomorrow(update, context)
         return
     
-    start_time = datetime.datetime.combine(today, datetime.datetime.strptime(classes.get("start_time", "10:15:00"), '%H:%M:%S').time())
+    start_time = datetime.datetime.combine(today, datetime.datetime.strptime(classes.get("start_time", "10:15:00"), '%H:%M:%S').time()).replace(tzinfo=my_timezone)
     for sub, kind, duration in classes['classes']:
         subject = routine.get(sub, sub)
         begin_time = start_time
         end_time = begin_time + datetime.timedelta(minutes=duration * routine['class_time'])
         time_str = f"{begin_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
         start_time = end_time
-        await update.message.reply_text(f"DEBUG --> {str(current_time)},{ begin_time},{ end_time}")
+        await update.message.reply_text(f"DEBUG --> {str(current_time)},{subject}, { begin_time},{ end_time}")
 
         if ((current_time >= begin_time) and (current_time <= end_time)):
             class_type = f"{routine.get(kind[0], kind[0])} "
