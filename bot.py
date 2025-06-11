@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 import asyncio
-import ZoneInfo
+from zoneinfo import ZoneInfo
 import pytz
 
 load_dotenv()
