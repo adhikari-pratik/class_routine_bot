@@ -213,7 +213,7 @@ async def main():
         webhook_url=WEBHOOK_URL
     )
     scheduler = AsyncIOScheduler(timezone=my_timezone)
-    scheduler.add_job(send_daily_routine, CronTrigger(hour=22, minute=10))  # Change time as needed
+    scheduler.add_job(send_daily_routine, CronTrigger(hour=23, minute=2))  # Change time as needed
     scheduler.start()
     await asyncio.Event().wait()
 
