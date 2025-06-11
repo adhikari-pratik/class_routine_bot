@@ -142,7 +142,7 @@ async def ongoing(update: Update, context: ContextTypes.DEFAULT_TYPE):
         end_time = begin_time + datetime.timedelta(minutes=duration * routine['class_time'])
         time_str = f"{begin_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
         start_time = end_time
-        await update.message.reply_text("DEBUG -->", datetime.datetime.now(), begin_time, end_time)
+        await update.message.reply_text(f"DEBUG --> {str(datetime.datetime.now())},{ begin_time},{ end_time}")
 
         if ((datetime.datetime.now() >= begin_time) and (datetime.datetime.now() <= end_time)):
             class_type = f"{routine.get(kind[0], kind[0])} "
@@ -209,7 +209,7 @@ async def main():
         webhook_url=WEBHOOK_URL
     )
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(send_daily_routine, CronTrigger(hour=22, minute=00))  # Change time as needed
+    scheduler.add_job(send_daily_routine, CronTrigger(hour=22, minute=10))  # Change time as needed
     scheduler.start()
     await asyncio.Event().wait()
 
