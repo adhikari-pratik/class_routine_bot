@@ -146,7 +146,7 @@ async def ongoing(update: Update, context: ContextTypes.DEFAULT_TYPE):
         end_time = begin_time + datetime.timedelta(minutes=duration * routine['class_time'])
         time_str = f"{begin_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
         start_time = end_time
-        await update.message.reply_text(f"DEBUG --> {str(current_time)},{subject}, { begin_time},{ end_time}")
+        # await update.message.reply_text(f"DEBUG --> {str(current_time)},{subject}, { begin_time},{ end_time}")
 
         if ((current_time >= begin_time) and (current_time <= end_time)):
             class_type = f"{routine.get(kind[0], kind[0])} "
@@ -178,7 +178,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text('Hello! I am your bot.')
+    await update.message.reply_text('Hello! I am your bot. I can help you with your daily routine. Use /help to see available commands.')
 
 # Scheduled job
 async def send_daily_routine():
@@ -194,12 +194,12 @@ async def main():
     app.add_handler(CommandHandler("next", upcoming))
     app.add_handler(CommandHandler("tomorrow", tomorrow))
     app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("ongoing", ongoing))
+    app.add_handler(CommandHandler("now", ongoing))
     print("✅ Bot running. \n 📌 *Available Commands:*\n"
         "/today - Show today's classes\n"
         "/tomorrow - Show tomorrow's classes\n"
         "/next - Show next class for today\n"
-        "/ongoing - Show ongoing class\n"
+        "/now - Show ongoing class\n"
         "/help - Show this help message")
     
     await app.initialize()
@@ -213,7 +213,7 @@ async def main():
         webhook_url=WEBHOOK_URL
     )
     scheduler = AsyncIOScheduler(timezone=my_timezone)
-    scheduler.add_job(send_daily_routine, CronTrigger(hour=23, minute=2))  # Change time as needed
+    scheduler.add_job(send_daily_routine, CronTrigger(hour=23, minute=15))  # Change time as needed
     scheduler.start()
     await asyncio.Event().wait()
 
