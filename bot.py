@@ -142,6 +142,8 @@ async def ongoing(update: Update, context: ContextTypes.DEFAULT_TYPE):
         end_time = begin_time + datetime.timedelta(minutes=duration * routine['class_time'])
         time_str = f"{begin_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
         start_time = end_time
+        print("DEBUG -->", datetime.datetime.now(), begin_time, end_time)
+
         if ((datetime.datetime.now() >= begin_time) and (datetime.datetime.now() <= end_time)):
             class_type = f"{routine.get(kind[0], kind[0])} "
             for k in range(1, len(kind)):
@@ -155,7 +157,7 @@ async def ongoing(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await tomorrow(update, context)
         return
     
-    await update.message.reply_text(f"🎉 No ongoing classes your next class starts at {start_time.strftime('%H:%M')}.")
+    await update.message.reply_text(f"🎉 No ongoing classes your next class starts at {begin_time.strftime('%H:%M')}.")
     return
 
 
