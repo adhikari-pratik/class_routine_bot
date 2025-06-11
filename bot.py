@@ -25,7 +25,7 @@ async def today(update: Update, context: ContextTypes.DEFAULT_TYPE):
     routine = load_routine()
     weekday = datetime.datetime.now().strftime('%A')
     classes = routine.get(weekday, [])
-
+    out = f"**📅{weekday}**\n"
     if not classes['classes']:
         await update.message.reply_text("🎉 No classes today!")
         await tomorrow(update, context)
@@ -177,7 +177,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Scheduled job
 async def send_daily_routine():
     print("⏰ Sending daily routine...")
-    await app.bot.send_message(chat_id=MY_CHAT_ID, text="📅 This is your daily routine!")
+    await app.bot.send_message(chat_id=MY_CHAT_ID, text=today(update=Update, context=ContextTypes.DEFAULT_TYPE), parse_mode="Markdown")
 
 # Main function to run the bot
 async def main():
@@ -207,7 +207,7 @@ async def main():
         webhook_url=WEBHOOK_URL
     )
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(send_daily_routine, CronTrigger(hour=7, minute=00))  # Change time as needed
+    scheduler.add_job(send_daily_routine, CronTrigger(hour=22, minute=00))  # Change time as needed
     scheduler.start()
     await asyncio.Event().wait()
 
