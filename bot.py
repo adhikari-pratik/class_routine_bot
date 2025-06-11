@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 import asyncio
+import pytz
 
 load_dotenv()
 # Replace with your actual bot token
@@ -14,6 +15,9 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 PORT = int(os.getenv("PORT", 8443))  # Default to 8443 if not set
 WEBHOOK_URL = f"https://{os.environ['RENDER_SERVICE_NAME']}.onrender.com/{BOT_TOKEN}"
 MY_CHAT_ID = int(os.getenv("MY_CHAT_ID"))
+
+my_timezone = pytz.timezone("Asia/Kathmandu")
+current_time = datetime.datetime.now(my_timezone)
 
 # Load routine from file
 def load_routine():
@@ -23,7 +27,7 @@ def load_routine():
 # /today command handler
 async def today(update: Update, context: ContextTypes.DEFAULT_TYPE):
     routine = load_routine()
-    weekday = datetime.datetime.now().strftime('%A')
+    weekday = current_time.strftime('%A')
     classes = routine.get(weekday, [])
     out = f"**📅{weekday}**\n"
     if not classes['classes']:
@@ -48,9 +52,9 @@ async def today(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def upcoming(update: Update, context: ContextTypes.DEFAULT_TYPE):
     routine = load_routine()
-    weekday = datetime.datetime.now().strftime("%A")
+    weekday = current_time.strftime("%A")
     classes = routine.get(weekday, [])
-    today = datetime.date.today()
+    today = current_time.date()
     rem = 0
 
     if not classes:
@@ -79,10 +83,9 @@ async def upcoming(update: Update, context: ContextTypes.DEFAULT_TYPE):
             for k in range(1, len(kind)):
                 class_type += f" + {routine.get(kind[k], kind[k])}"
 
-            # ✅ Proper time comparison
             # print("DEBUG -->", datetime.datetime.now(),  begin_time, end_time)
             # print(datetime.datetime.combine(today, (datetime.datetime.strptime("13:37:00", "%H:%M:%S")).time()))
-            if (datetime.datetime.now() < end_time) and (datetime.datetime.now() < begin_time):
+            if (current_time < end_time) and (current_time< begin_time):
                 # print("in the loop")
                 rem += 1
                 msg += f"\n• {subject}\n  {class_type}\n   🕒 {time_str}\n  ⏳{duration} Periods({duration*routine['class_time']} mins)\n"
@@ -99,9 +102,9 @@ async def upcoming(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def tomorrow(update: Update, context: ContextTypes.DEFAULT_TYPE):
     routine = load_routine()
-    weekday = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%A")
+    weekday = (current_time + datetime.timedelta(days=1)).strftime("%A")
     classes = routine.get(weekday, [])
-    tomo = datetime.date.today() + datetime.timedelta(days=1)
+    tomo = current_time.date() + datetime.timedelta(days=1)
 
     if not classes:
         await update.message.reply_text(f"🎉 No classes for tomorrow -->{weekday}.\nEnjoy your holiday 🎉")
@@ -125,8 +128,8 @@ async def tomorrow(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def ongoing(update: Update, context: ContextTypes.DEFAULT_TYPE):
     routine= load_routine()
-    weekday = datetime.datetime.now().strftime("%A")
-    today = (datetime.date.today())
+    weekday = current_time.strftime("%A")
+    today = (current_time.date())
     classes = routine.get(weekday, [])
     print("DEBUG -->", today)
 
@@ -142,17 +145,17 @@ async def ongoing(update: Update, context: ContextTypes.DEFAULT_TYPE):
         end_time = begin_time + datetime.timedelta(minutes=duration * routine['class_time'])
         time_str = f"{begin_time.strftime('%H:%M')} - {end_time.strftime('%H:%M')}"
         start_time = end_time
-        await update.message.reply_text(f"DEBUG --> {str(datetime.datetime.now())},{ begin_time},{ end_time}")
+        await update.message.reply_text(f"DEBUG --> {str(current_time)},{ begin_time},{ end_time}")
 
-        if ((datetime.datetime.now() >= begin_time) and (datetime.datetime.now() <= end_time)):
+        if ((current_time >= begin_time) and (current_time <= end_time)):
             class_type = f"{routine.get(kind[0], kind[0])} "
             for k in range(1, len(kind)):
                 class_type += f"+ {routine.get(kind[k], kind[k])} "
-            msg = f"📚 Ongoing Class:\n\n• {subject}\n  {class_type}\n  🕒{time_str}\n  ⏳{int((end_time-datetime.datetime.now()).total_seconds()//60)} mins remaining\n"
+            msg = f"📚 Ongoing Class:\n\n• {subject}\n  {class_type}\n  🕒{time_str}\n  ⏳{int((end_time-current_time).total_seconds()//60)} mins remaining\n"
             await update.message.reply_text(msg)
             return
 
-    if datetime.datetime.now() > start_time:
+    if current_time > start_time:
         await update.message.reply_text(f"🎉 Classes Finished for Today -->{weekday}.")
         await tomorrow(update, context)
         return
@@ -208,7 +211,7 @@ async def main():
         url_path=BOT_TOKEN,
         webhook_url=WEBHOOK_URL
     )
-    scheduler = AsyncIOScheduler()
+    scheduler = AsyncIOScheduler(timezone=my_timezone)
     scheduler.add_job(send_daily_routine, CronTrigger(hour=22, minute=10))  # Change time as needed
     scheduler.start()
     await asyncio.Event().wait()
